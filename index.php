@@ -22,6 +22,12 @@ $id = implode("_", split('[^0-9]+', @$_SERVER["REMOTE_ADDR"]." ".@$_SERVER["REMO
 $fns = "{$tmpdir}/{$id}.{$exts}";
 
 if (strlen($url = @$_REQUEST["u0"]) > strlen($defaulturl)) {
+	if ((ereg('^https?://', $url)))
+		;
+	else if ((ereg('^ftps?://', $url)))
+		;
+	else
+		die("protocol not supported.");
 	$fn0 = null;
 	$name = $url;
 } else if (($fn0 = @$_FILES["f0"]["tmp_name"]) !== null) {

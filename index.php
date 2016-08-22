@@ -10,7 +10,24 @@ function	my_ini_get($key)
 }
 
 
-if (($fn0 = @$_FILES["f0"]["tmp_name"]) === null) {
+if ((get_magic_quotes_runtime()))
+	set_magic_quotes_runtime(0);
+
+$defaulturl = "https://";
+$url = null;
+$name = null;
+$fn0 = null;
+
+$id = implode("_", split('[^0-9]+', @$_SERVER["REMOTE_ADDR"]." ".@$_SERVER["REMOTE_PORT"]));
+$fns = "{$tmpdir}/{$id}.{$exts}";
+
+if (strlen($url = @$_REQUEST["u0"]) > strlen($defaulturl)) {
+	$fn0 = null;
+	$name = $url;
+} else if (($fn0 = @$_FILES["f0"]["tmp_name"]) !== null) {
+	$url = null;
+	$name = @$_FILES["f0"]["name"];
+} else {
 	$s = my_ini_get("post_max_size")." ".my_ini_get("upload_max_filesize");
 	print <<<EOO
 <HTML><HEAD><TITLE>officeconvert</TITLE></HEAD><BODY>
@@ -18,8 +35,8 @@ if (($fn0 = @$_FILES["f0"]["tmp_name"]) === null) {
 
 <FORM method=POST enctype="multipart/form-data">
 <UL>
-	<LI>{$s}
-	<LI><INPUT type=file name=f0>
+	<LI>from URL: <INPUT type=text name=u0 size=60 value="{$defaulturl}">
+	<LI>from file: ({$s}) <INPUT type=file name=f0>
 	<LI>convert-to: <SELECT name=t0>
 <OPTION value=pdf selected>* -&gt; .pdf</OPTION>
 <OPTION value=txt>doc -&gt; .txt</OPTION>
@@ -37,23 +54,19 @@ EOO;
 	die();
 }
 
-$s = @$_FILES["f0"]["name"];
 $exts = null;
 foreach (explode("/", $extslist) as $val)
-	if (eregi('\.'.$val.'$', $s)) {
+	if (eregi('\.'.$val.'$', $name)) {
 		$exts = $val;
 		break;
 	}
 if ($exts === null)
 	die("extension not supported.");
 
-$id = implode("_", split('[^0-9]+', @$_SERVER["REMOTE_ADDR"]." ".@$_SERVER["REMOTE_PORT"]));
-$fns = "{$tmpdir}/{$id}.{$exts}";
-
 $infilter = null;
 $extdsub = "";
 $ctype = "";
-switch ($extd = @$_POST["t0"]) {
+switch ($extd = @$_REQUEST["t0"]) {
 	default:
 		die("convert-to not supported.");
 	case	"pdf":
@@ -71,8 +84,13 @@ switch ($extd = @$_POST["t0"]) {
 }
 $fnd = "{$tmpdir}/{$id}.{$extd}";
 
-if (!move_uploaded_file($fn0, $fns))
-	die("move_uploaded_file failed.");
+if ($fn0 === null) {
+	$s = file_get_contents($url) or die("file_get_contents failed.");
+	file_put_contents($fns, $s);
+} else {
+	if (!move_uploaded_file($fn0, $fns))
+		die("move_uploaded_file failed.");
+}
 
 $s = `env HOME=/tmp LANG=en_US.UTF-8 libreoffice --headless --convert-to {$extd}{$extdsub} --outdir {$tmpdir} {$infilter} {$fns}`;
 @unlink($fns);

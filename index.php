@@ -19,7 +19,6 @@ $name = null;
 $fn0 = null;
 
 $id = implode("_", split('[^0-9]+', @$_SERVER["REMOTE_ADDR"]." ".@$_SERVER["REMOTE_PORT"]));
-$fns = "{$tmpdir}/{$id}.{$exts}";
 
 if (strlen($url = @$_REQUEST["u0"]) > strlen($defaulturl)) {
 	if ((ereg('^https?://', $url)))
@@ -88,6 +87,7 @@ switch ($extd = @$_REQUEST["t0"]) {
 		$infilter = "--infilter=CSV:9,34,UTF8";
 		break;
 }
+$fns = "{$tmpdir}/{$id}.{$exts}";
 $fnd = "{$tmpdir}/{$id}.{$extd}";
 
 if ($fn0 === null) {
